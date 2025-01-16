@@ -17,19 +17,19 @@ namespace CompanyWebApp
         {
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-            //Подключаем в конфигурацию файл appsettings.json
+            //РџРѕРґРєР»СЋС‡Р°РµРј РІ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ С„Р°Р№Р» appsettings.json
             IConfigurationBuilder configBuild = new ConfigurationBuilder()
                 .SetBasePath(builder.Environment.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddEnvironmentVariables();
 
-            //Оборачиваем секцию Project в объектную форму для удобства
+            //РћР±РѕСЂР°С‡РёРІР°РµРј СЃРµРєС†РёСЋ Project РІ РѕР±СЉРµРєС‚РЅСѓСЋ С„РѕСЂРјСѓ РґР»СЏ СѓРґРѕР±СЃС‚РІР°
             IConfiguration configuration = configBuild.Build();
             AppConfig config = configuration.GetSection("Project").Get<AppConfig>()!;
 
-            //Подключаем контекст БД
+            //РџРѕРґРєР»СЋС‡Р°РµРј РєРѕРЅС‚РµРєСЃС‚ Р‘Р”
             builder.Services.AddDbContext<AppDbContext>(x => x.UseNpgsql(config.Database.ConnectionString)
-                //На момент создания сайта в данной версии EF есть баг, поэтому подавляем предупреждения
+                //РќР° РјРѕРјРµРЅС‚ СЃРѕР·РґР°РЅРёСЏ СЃР°Р№С‚Р° РІ РґР°РЅРЅРѕР№ РІРµСЂСЃРёРё EF РµСЃС‚СЊ Р±Р°Рі, РїРѕСЌС‚РѕРјСѓ РїРѕРґР°РІР»СЏРµРј РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёСЏ
                 .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
             builder.Services.AddTransient<IServiceCategoriesRepository, EFServiceCategoriesRepository>();
@@ -37,7 +37,7 @@ namespace CompanyWebApp
             builder.Services.AddTransient<IServiceTypesRepository, EFServiceTypesRepository>();
             builder.Services.AddTransient<DataManager>();
 
-            //Настраиваем Identity систему
+            //РќР°СЃС‚СЂР°РёРІР°РµРј Identity СЃРёСЃС‚РµРјСѓ
             builder.Services.AddIdentity<IdentityUser,  IdentityRole>(options =>
             {
                 options.User.RequireUniqueEmail = true;
@@ -47,7 +47,7 @@ namespace CompanyWebApp
                 options.Password.RequireUppercase = false;
                 options.Password.RequireDigit = false;
             }).AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
-            //Настраиваем Auth cookie
+            //РќР°СЃС‚СЂР°РёРІР°РµРј Auth cookie
             builder.Services.ConfigureApplicationCookie(options =>
             {
                 options.Cookie.Name = "CompanyWebAppAuth";
@@ -57,36 +57,36 @@ namespace CompanyWebApp
                 options.SlidingExpiration = true;
             });
 
-            //Подключаем функционал контроллеров
+            //РџРѕРґРєР»СЋС‡Р°РµРј С„СѓРЅРєС†РёРѕРЅР°Р» РєРѕРЅС‚СЂРѕР»Р»РµСЂРѕРІ
             builder.Services.AddControllersWithViews();
 
-            //Подключаем логи
+            //РџРѕРґРєР»СЋС‡Р°РµРј Р»РѕРіРё
             builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
 
-            //Собираем конфигурацию 
+            //РЎРѕР±РёСЂР°РµРј РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ 
             WebApplication app = builder.Build();
 
-            //Порядок следования middleware очень важен, они будут выполняться согласно нему
+            //РџРѕСЂСЏРґРѕРє СЃР»РµРґРѕРІР°РЅРёСЏ middleware РѕС‡РµРЅСЊ РІР°Р¶РµРЅ, РѕРЅРё Р±СѓРґСѓС‚ РІС‹РїРѕР»РЅСЏС‚СЊСЃСЏ СЃРѕРіР»Р°СЃРЅРѕ РЅРµРјСѓ
 
-            //Сразу же используем логирование
+            //РЎСЂР°Р·Сѓ Р¶Рµ РёСЃРїРѕР»СЊР·СѓРµРј Р»РѕРіРёСЂРѕРІР°РЅРёРµ
             app.UseSerilogRequestLogging();
 
-            //Далее подключаем обработку исключений
+            //Р”Р°Р»РµРµ РїРѕРґРєР»СЋС‡Р°РµРј РѕР±СЂР°Р±РѕС‚РєСѓ РёСЃРєР»СЋС‡РµРЅРёР№
             if(app.Environment.IsDevelopment())
                 app.UseDeveloperExceptionPage();
 
-            //Подключаем использование статичных файлов (js, css, любых)
+            //РџРѕРґРєР»СЋС‡Р°РµРј РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ СЃС‚Р°С‚РёС‡РЅС‹С… С„Р°Р№Р»РѕРІ (js, css, Р»СЋР±С‹С…)
             app.UseStaticFiles();
 
-            //Подключаем систему маршрутизации
+            //РџРѕРґРєР»СЋС‡Р°РµРј СЃРёСЃС‚РµРјСѓ РјР°СЂС€СЂСѓС‚РёР·Р°С†РёРё
             app.UseRouting();
 
-            //Подключаем аутентификацию и авторизацию
+            //РџРѕРґРєР»СЋС‡Р°РµРј Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёСЋ Рё Р°РІС‚РѕСЂРёР·Р°С†РёСЋ
             app.UseCookiePolicy();
             app.UseAuthentication();
             app.UseAuthorization();
 
-            //Регистрируем нужные нам маршруты
+            //Р РµРіРёСЃС‚СЂРёСЂСѓРµРј РЅСѓР¶РЅС‹Рµ РЅР°Рј РјР°СЂС€СЂСѓС‚С‹
             app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 
             await app.RunAsync();
